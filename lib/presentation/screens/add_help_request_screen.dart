@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../blocs/help_request_cubit.dart';
-import '../blocs/account_cubit.dart';
 import '../../data/models/help_request_dto.dart';
-import '../localization/locale_keys.g.dart';
 import '../partials/base_app_bar.dart';
 import '../../core/enums/emergency_level.dart';
 import '../../core/enums/help_request_status.dart';
@@ -12,7 +10,7 @@ import '../../core/constants/admob_banner_widget.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsolive/data/providers/image_upload_provider.dart';
 import 'dart:io';
-import 'package:petsolive/data/providers/help_request_api_service.dart';
+import '../../core/network/auth_service.dart';
 
 class AddHelpRequestScreen extends StatefulWidget {
   const AddHelpRequestScreen({Key? key}) : super(key: key);
@@ -36,6 +34,8 @@ class _AddHelpRequestScreenState extends State<AddHelpRequestScreen> {
   File? _selectedImageFile;
   bool _isUploadingImage = false;
   final ImagePicker _picker = ImagePicker();
+  Map<String, dynamic>? _currentUser;
+  String? _token;
   // --- SON EKLENENLER ---
 
   void _setLoadingByState(BuildContext context) {
@@ -60,30 +60,42 @@ class _AddHelpRequestScreenState extends State<AddHelpRequestScreen> {
   @override
   void initState() {
     super.initState();
-    final accountCubit = context.read<AccountCubit>();
-    accountCubit.checkSession();
-    final accountState = accountCubit.state;
-    if (accountState is AccountSuccess) {
-      final user = accountState.response.user;
-      _contactNameController.text = user.username;
-      _contactPhoneController.text = user.phoneNumber ?? '';
-      _contactEmailController.text = user.email;
-    }
+    _loadSession();
+  }
+
+  Future<void> _loadSession() async {
+    final authService = AuthService();
+    final token = await authService.getToken();
+    final user = await authService.getUser();
+    if (!mounted) return;
+    setState(() {
+      _token = token;
+      _currentUser = user;
+      if (user != null) {
+        _contactNameController.text = user['username'] ?? '';
+        _contactPhoneController.text = user['phoneNumber'] ?? '';
+        _contactEmailController.text = user['email'] ?? '';
+      }
+    });
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    final accountState = context.read<AccountCubit>().state;
-    if (accountState is! AccountSuccess) {
+    if (_token == null || _currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('help_requests.login_required'.tr())),
       );
       setState(() => _isLoading = false);
       return;
     }
-    final user = accountState.response.user;
-    final token = accountState.response.token;
+    final user = _currentUser!;
+    final username = user['username'] ?? '';
+    final phone = user['phoneNumber'] ?? '';
+    final email = user['email'] ?? '';
+    final userId = user['id'] is int
+        ? user['id'] as int
+        : int.tryParse(user['id']?.toString() ?? '0') ?? 0;
     final dto = HelpRequestDto(
       id: 0,
       title: _titleController.text,
@@ -91,27 +103,17 @@ class _AddHelpRequestScreenState extends State<AddHelpRequestScreen> {
       emergencyLevel: _emergencyLevel,
       location: _locationController.text,
       imageUrl: _imageUrlController.text,
-      userId: user.id,
-      userName: user.username ?? '',
-      contactName: _contactNameController.text.isNotEmpty ? _contactNameController.text : user.username ?? '',
-      contactPhone: _contactPhoneController.text,
-      contactEmail: _contactEmailController.text,
+      userId: userId,
+      userName: username,
+    contactName: _contactNameController.text.isNotEmpty ? _contactNameController.text : username,
+    contactPhone: _contactPhoneController.text.isNotEmpty ? _contactPhoneController.text : phone,
+    contactEmail: _contactEmailController.text.isNotEmpty ? _contactEmailController.text : email,
       createdAt: DateTime.now(),
       status: HelpRequestStatus.Active,
     );
     try {
-      if (_imageUrlController.text.isNotEmpty) {
-        await HelpRequestApiService().createMultipart(dto, token, _selectedImageFile, _imageUrlController.text);
-      } else {
-        await HelpRequestApiService().create(dto, token);
-      }
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('help_requests.add_success'.tr()), backgroundColor: Colors.green),
-        );
-        await Future.delayed(const Duration(milliseconds: 800));
-        Navigator.of(context).pop(true);
-      }
+      final cubit = context.read<HelpRequestCubit>();
+      await cubit.create(dto, _token!);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -414,4 +416,4 @@ class _AddHelpRequestScreenState extends State<AddHelpRequestScreen> {
       ),
     );
   }
-} 
+}

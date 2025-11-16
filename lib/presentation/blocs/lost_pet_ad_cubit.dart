@@ -21,9 +21,6 @@ class LostPetAdError extends LostPetAdState {
 
 class LostPetAdCubit extends Cubit<LostPetAdState> {
   final LostPetAdRepository repository;
-  List<LostPetAdDto> _allAds = [];
-  int _loadedCount = 0;
-  final int _pageSize = 5;
   LostPetAdCubit(this.repository) : super(LostPetAdInitial());
 
   Future<void> getAll() async {
@@ -31,20 +28,14 @@ class LostPetAdCubit extends Cubit<LostPetAdState> {
     emit(LostPetAdLoading());
     try {
       final list = await repository.getAll();
+      final sortedAds = List<LostPetAdDto>.from(list)
+        ..sort((a, b) => b.id.compareTo(a.id));
       if (isClosed) return;
-      _allAds = list;
-      _loadedCount = _pageSize;
-      emit(LostPetAdLoaded(_allAds.take(_loadedCount).toList(), hasMore: _allAds.length > _loadedCount));
+      emit(LostPetAdLoaded(sortedAds, hasMore: false));
     } catch (e) {
       if (isClosed) return;
       emit(LostPetAdError(e.toString()));
     }
-  }
-
-  void loadMore() {
-    if (_loadedCount >= _allAds.length) return;
-    _loadedCount += _pageSize;
-    emit(LostPetAdLoaded(_allAds.take(_loadedCount).toList(), hasMore: _allAds.length > _loadedCount));
   }
 
   Future<void> getById(int id) async {

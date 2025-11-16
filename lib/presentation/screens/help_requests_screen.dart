@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../blocs/help_request_cubit.dart';
-import '../blocs/account_cubit.dart';
 import '../widgets/help_request_card.dart';
-import '../../injection_container.dart';
 import '../../core/network/auth_service.dart';
 import 'add_help_request_screen.dart';
 import '../../core/constants/admob_banner_widget.dart';
@@ -26,7 +24,6 @@ class _HelpRequestsScreenState extends State<HelpRequestsScreen> {
 
   bool _showFab = false;
   Map<String, dynamic>? _user;
-  List<dynamic> _helpRequests = [];
 
   List<String> getTabs(bool showMyAds) {
     if (showMyAds) {
@@ -61,7 +58,6 @@ class _HelpRequestsScreenState extends State<HelpRequestsScreen> {
           bool hasMore = false;
           if (state is HelpRequestLoaded) {
             helpRequests = state.helpRequests;
-            _helpRequests = helpRequests;
             hasMore = state.hasMore;
           }
           final userId = _user != null ? _user!['id'] : null;
@@ -169,7 +165,6 @@ class _HelpRequestsScreenState extends State<HelpRequestsScreen> {
                     builder: (_) => MultiBlocProvider(
                       providers: [
                         BlocProvider.value(value: context.read<HelpRequestCubit>()),
-                        BlocProvider.value(value: context.read<AccountCubit>()),
                       ],
                       child: AddHelpRequestScreen(),
                     ),

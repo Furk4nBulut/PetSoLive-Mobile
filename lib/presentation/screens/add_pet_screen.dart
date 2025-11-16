@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '../blocs/pet_cubit.dart';
 import '../../data/models/pet_dto.dart';
 import '../../data/local/session_manager.dart';
 import '../partials/base_app_bar.dart';
 import '../../core/constants/admob_banner_widget.dart';
-import '../widgets/image_upload_button.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 import '../../data/providers/pet_api_service.dart';
 import '../../data/providers/image_upload_provider.dart';
 
@@ -43,8 +39,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
   bool _isLoading = false;
 
   final List<String> _genderOptions = ['Erkek', 'Dişi'];
-  final List<String> _speciesOptions = ['Köpek', 'Kedi', 'Kuş', 'Diğer...'];
-  bool _customSpecies = false;
 
   Future<List<String>> fetchSpeciesList() async {
     // Burada gerçek API çağrısı yapılabilir
@@ -85,6 +79,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
     try {
       final sessionManager = SessionManager();
       final token = await sessionManager.getToken() ?? '';
+
       await PetApiService().createPetMultipart(
         name: _nameController.text,
         species: _speciesController.text,
@@ -101,11 +96,12 @@ class _AddPetScreenState extends State<AddPetScreen> {
         imageFile: _selectedImage!,
         token: token,
       );
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('pets.add_success'.tr())),
       );
-      Navigator.of(context).pop(true); // return success flag
+      Navigator.of(context).pop(true);
     } catch (e) {
       debugPrint('Hata: $e');
       if (!mounted) return;

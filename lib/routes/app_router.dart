@@ -13,6 +13,7 @@ import '../injection_container.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../presentation/screens/add_help_request_screen.dart';
 import '../presentation/blocs/help_request_cubit.dart';
+import '../presentation/screens/add_pet_screen.dart';
 
 /// Uygulamanın tüm rotalarını merkezi olarak yöneten sınıf.
 /// Yeni bir ekran eklemek için sadece buraya case eklemen yeterli.
@@ -54,11 +55,12 @@ class AppRouter {
           builder: (context) => MultiBlocProvider(
             providers: [
               BlocProvider(create: (_) => sl<HelpRequestCubit>()),
-              BlocProvider.value(value: BlocProvider.of<AccountCubit>(context)),
             ],
             child: const AddHelpRequestScreen(),
           ),
         );
+      case '/add_pet':
+        return MaterialPageRoute(builder: (_) => const AddPetScreen());
       case '/login':
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
@@ -91,4 +93,4 @@ class AppRouter {
 // MaterialApp'da: onGenerateRoute: AppRouter.generateRoute, 
 
 // Global route observer for navigation events
-final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>(); 
+final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();

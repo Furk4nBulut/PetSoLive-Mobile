@@ -11,12 +11,17 @@ class HelpRequestRepositoryImpl implements HelpRequestRepository {
 
   @override
   Future<List<HelpRequestDto>> getAll() async {
-    final localRequests = await localDataSource.getRequests();
-    // Arka planda API'den veri çekip local veriyi güncelle
-    apiService.getAll().then((requests) async {
-      await localDataSource.saveRequests(requests);
-    });
-    return localRequests;
+    try {
+      final apiRequests = await apiService.getAll();
+      await localDataSource.saveRequests(apiRequests);
+      return apiRequests;
+    } catch (_) {
+      final cached = await localDataSource.getRequests();
+      if (cached.isNotEmpty) {
+        return cached;
+      }
+      rethrow;
+    }
   }
 
   @override

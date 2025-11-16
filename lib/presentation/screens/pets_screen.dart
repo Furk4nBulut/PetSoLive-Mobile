@@ -9,7 +9,6 @@ import 'pets/pet_tab_bar.dart';
 import 'pets/pet_search_bar.dart';
 import 'pets/pet_list_tab.dart';
 import '../../core/constants/admob_banner_widget.dart';
-import 'add_pet_screen.dart';
 
 class PetsScreen extends StatelessWidget {
   const PetsScreen({Key? key}) : super(key: key);
@@ -291,9 +290,7 @@ class _PetsScreenBodyState extends State<_PetsScreenBody> with TickerProviderSta
                 Navigator.of(context).pushReplacementNamed('/login');
                 return;
               }
-              final result = await Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AddPetScreen()),
-              );
+              final result = await Navigator.of(context).pushNamed('/add_pet');
               if (result == true) {
                 context.read<PetCubit>().fetchPets(reset: true);
               }

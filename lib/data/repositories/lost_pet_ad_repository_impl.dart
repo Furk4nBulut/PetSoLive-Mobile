@@ -10,12 +10,17 @@ class LostPetAdRepositoryImpl implements LostPetAdRepository {
 
   @override
   Future<List<LostPetAdDto>> getAll() async {
-    final localAds = await localDataSource.getAds();
-    // Arka planda API'den veri çekip local veriyi güncelle
-    apiService.getAll().then((ads) async {
-      await localDataSource.saveAds(ads);
-    });
-    return localAds;
+    try {
+      final remoteAds = await apiService.getAll();
+      await localDataSource.saveAds(remoteAds);
+      return remoteAds;
+    } catch (_) {
+      final cachedAds = await localDataSource.getAds();
+      if (cachedAds.isNotEmpty) {
+        return cachedAds;
+      }
+      rethrow;
+    }
   }
 
   @override
