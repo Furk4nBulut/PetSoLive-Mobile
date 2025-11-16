@@ -9,6 +9,7 @@ import 'pets/pet_tab_bar.dart';
 import 'pets/pet_search_bar.dart';
 import 'pets/pet_list_tab.dart';
 import '../../core/constants/admob_banner_widget.dart';
+import 'add_pet_screen.dart';
 
 class PetsScreen extends StatelessWidget {
   const PetsScreen({Key? key}) : super(key: key);
@@ -273,68 +274,92 @@ class _PetsScreenBodyState extends State<_PetsScreenBody> with TickerProviderSta
           if (showMyPetsTab) Tab(text: 'pets.tab_my_pets'.tr()),
         ];
         _updateTabController(tabs.length);
-        final colorScheme = Theme.of(context).colorScheme;
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Column(
-          children: [
-            PetTabBar(controller: _tabController, tabs: tabs),
-            PetSearchBar(
-              controller: _controller,
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value;
-                });
-                _fetchTabPets(reset: true);
-              },
-              onFilterPressed: () => _openFilterModal(context),
-              isDark: isDark,
-            ),
-            const AdmobBannerWidget(),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  PetListTab(
-                    adoptedStatus: null,
-                    species: speciesFilter,
-                    color: colorFilter,
-                    breed: breedFilter,
-                    search: searchQuery,
-                    currentUserId: currentUserId,
-                  ),
-                  PetListTab(
-                    adoptedStatus: 'owned',
-                    species: speciesFilter,
-                    color: colorFilter,
-                    breed: breedFilter,
-                    search: searchQuery,
-                    currentUserId: currentUserId,
-                  ),
-                  PetListTab(
-                    adoptedStatus: 'waiting',
-                    species: speciesFilter,
-                    color: colorFilter,
-                    breed: breedFilter,
-                    search: searchQuery,
-                    currentUserId: currentUserId,
-                  ),
-                  if (showMyPetsTab)
+        // Scaffold ile sar ve FAB ekle
+        return Scaffold(
+          floatingActionButton: FloatingActionButton(
+            heroTag: 'addPetFab',
+            tooltip: 'pets.add'.tr(),
+            child: Icon(Icons.add),
+            onPressed: () async {
+              if (currentUserId == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('pets.login_required'.tr())), // changed key
+                );
+                await Future.delayed(const Duration(milliseconds: 800));
+                if (!mounted) return;
+                Navigator.of(context).pushReplacementNamed('/login');
+                return;
+              }
+              final result = await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AddPetScreen()),
+              );
+              if (result == true) {
+                context.read<PetCubit>().fetchPets(reset: true);
+              }
+            },
+          ),
+          body: Column(
+            children: [
+              PetTabBar(controller: _tabController, tabs: tabs),
+              PetSearchBar(
+                controller: _controller,
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                  _fetchTabPets(reset: true);
+                },
+                onFilterPressed: () => _openFilterModal(context),
+                isDark: isDark,
+              ),
+              const AdmobBannerWidget(),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
                     PetListTab(
                       adoptedStatus: null,
                       species: speciesFilter,
                       color: colorFilter,
                       breed: breedFilter,
                       search: searchQuery,
-                      myPetsOnly: true,
                       currentUserId: currentUserId,
                     ),
-                ],
+                    PetListTab(
+                      adoptedStatus: 'owned',
+                      species: speciesFilter,
+                      color: colorFilter,
+                      breed: breedFilter,
+                      search: searchQuery,
+                      currentUserId: currentUserId,
+                    ),
+                    PetListTab(
+                      adoptedStatus: 'waiting',
+                      species: speciesFilter,
+                      color: colorFilter,
+                      breed: breedFilter,
+                      search: searchQuery,
+                      currentUserId: currentUserId,
+                    ),
+                    if (showMyPetsTab)
+                      PetListTab(
+                        adoptedStatus: null,
+                        species: speciesFilter,
+                        color: colorFilter,
+                        breed: breedFilter,
+                        search: searchQuery,
+                        myPetsOnly: true,
+                        currentUserId: currentUserId,
+                      ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 8),
-          ],
+              const SizedBox(height: 8),
+            ],
+          ),
         );
       },
     );
   }
-} 
+}

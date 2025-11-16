@@ -1,1 +1,0 @@
-// Adoption ekranı burada olacak 

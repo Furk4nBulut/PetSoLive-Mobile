@@ -417,5 +417,6 @@
   "pets.owned": "Sahipli",
   "pets.waiting": "Bekliyor",
   "pets.clear": "Temizle",
-  "pets.apply": "Uygula"
+  "pets.apply": "Uygula",
+  "pets.login_required": "Hayvan eklemek için giriş yapmalısınız."
 }

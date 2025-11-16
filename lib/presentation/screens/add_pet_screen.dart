@@ -103,14 +103,14 @@ class _AddPetScreenState extends State<AddPetScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Pet başarıyla eklendi!')),
+        SnackBar(content: Text('pets.add_success'.tr())),
       );
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(true); // return success flag
     } catch (e) {
       debugPrint('Hata: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Bir hata oluştu: $e')),
+        SnackBar(content: Text('form.error'.tr(args: [e.toString()]))),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -362,4 +362,4 @@ class _AddPetScreenState extends State<AddPetScreen> {
       ),
     );
   }
-} 
+}

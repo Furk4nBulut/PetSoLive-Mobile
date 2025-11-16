@@ -422,5 +422,6 @@
   "pets.owned": "Adopted",
   "pets.waiting": "Waiting",
   "pets.clear": "Clear",
-  "pets.apply": "Apply"
+  "pets.apply": "Apply",
+  "pets.login_required": "You must be logged in to add a pet."
 }
